@@ -16,6 +16,7 @@ Selim Karaoglu, 2018.
 import numpy as np
 import time
 import collections as col
+import matplotlib.pyplot as plt
 
 """Activation functions and derivative functions are defined here
 @x : Data
@@ -69,6 +70,7 @@ This function forward propagates layers using activation
 function of the layer.
 @x      : Data
 @layers : Layers as a list
+Returns activations list to feed to the next layer
 """
 def forward(x, layers):
     activations = [x]
@@ -80,11 +82,11 @@ def forward(x, layers):
 """Prediction function
 @X      : Data
 @layers : Layers as a list
+Returns predictions as a list
 """
 def Predict(X, layers):
     activations = forward(X, layers)
     predictions = activations[-1]
-    print("Prediction complete!")
     return predictions
 
 #Pretty obvoius isn't it?
@@ -99,6 +101,7 @@ This function back propagates layers using gradients.
 @t             : Output labels
 @learning_rate : Rate of adjustments on weights and bias
 @layers        : Layers as a list
+Returns cost
 """
 def backward(activations, t, learning_rate, layers):
     cost = 0
@@ -131,6 +134,7 @@ def backward(activations, t, learning_rate, layers):
 argument on truth and predicted labels and comparing both.
 @truth : One Hot Vector encoded labels
 @pred  : Predictions matrix
+Returns accuracy
 """
 def CalculateAccuracy(truth, pred):
     if len(truth) != len(pred):
@@ -153,6 +157,7 @@ def CalculateAccuracy(truth, pred):
 @num_epochs    : Number of epochs (default = 100)
 @batch_s       : Batch size (default = 50)
 @learning_rate : Rate of adjustments on weights and bias (default =  0.01)
+Returns Validation cost and Prediction scores.
 """
 def Train(layers, X, y, num_epochs=100, batch_s=50, learning_rate=.01):
     print("Training started, may take few minutes.")
@@ -165,8 +170,8 @@ def Train(layers, X, y, num_epochs=100, batch_s=50, learning_rate=.01):
         np.random.shuffle(_train)
         mini_batch = [_train[k:k+batch_s] for k in range(0, len(_train), batch_s)]
 
-        batch_cost = []
-        batch_score  = []
+        b_cost = []
+        b_score  = []
         for _b in mini_batch:
             X = np.asarray([x[0] for x in _b])
             y = np.asarray([x[1] for x in _b])
@@ -174,13 +179,13 @@ def Train(layers, X, y, num_epochs=100, batch_s=50, learning_rate=.01):
             activations, predictions = forwardPredict(X, layers)
 
             accuracy = CalculateAccuracy(y, predictions)
-            batch_score.append(accuracy)
+            b_score.append(accuracy)
 
             cost = backward(activations, y, learning_rate, layers)
-            batch_cost.append(cost)
+            b_cost.append(cost)
 
-        v_cost.append(np.mean(batch_cost))
-        p_score.append(np.mean(batch_score))
+        v_cost.append(np.mean(b_cost))
+        p_score.append(np.mean(b_score))
     print("Training completed in %s seconds." % str(time.time()-s))
     return v_cost, p_score
 
@@ -195,3 +200,17 @@ def OneHot(X):
     z = np.zeros((len(X), 10))
     z[np.arange(len(z)), X] += 1
     return z
+
+def PlotResults(score, accuracy, cost):
+    print("Training Accuracy = %s" % str(score[-1] * 100))
+    print("Test Accuracy = %s" % str(accuracy * 100))
+    fig, axes = plt.subplots(2,1, figsize=(20,20))
+    axes[0].set_title("Validation costs")
+    axes[1].set_title("Training Accuracy")
+    for x, y in enumerate(cost):
+        axes[0].scatter(x, y, color='purple', alpha=0.75)
+    for x, y in enumerate(score):
+        axes[1].scatter(x, y, color='orange', alpha=0.75)
+    plt.tight_layout()
+    plt.show()
+    
